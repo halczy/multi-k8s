@@ -1,0 +1,23 @@
+sudo: required
+services:
+  - docker
+  
+before_install:
+  - docker build -t halczy/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run halczy/react-test npm test -- --coverage
+  
+after_success:
+  # Build
+  - docker build -t halczy/multi-client ./client
+  - docker build -t halczy/multi-nginx  ./nginx
+  - docker build -t halczy/multi-server ./server
+  - docker build -t halczy/multi-worker ./worker
+  # Login
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Push
+  - docker push halczy/multi-client
+  - docker push halczy/multi-nginx
+  - docker push halczy/multi-server
+  - docker push halczy/multi-worker
